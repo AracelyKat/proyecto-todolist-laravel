@@ -14,10 +14,8 @@ class TaskController extends Controller
      */
     public function index()
     {
-        $tasks = Task::with('category','tags')->orderBy('created_at','desc')->get();
-        $categories = Category::all();
-        $tags = Tag::all();
-        return view('tasks.index', compact('tasks','categories','tags'));
+        $tasks = Task::with(['category', 'tags'])->latest()->get();
+        return view('tasks.index', compact('tasks'));
     }
 
     /**
@@ -25,7 +23,9 @@ class TaskController extends Controller
      */
     public function create()
     {
-        //
+        $categories = Category::all();
+        $tags = Tag::all();
+        return view('tasks.create', compact('categories','tags'));
     }
 
     /**
@@ -34,72 +34,67 @@ class TaskController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required',
-            'category_id' => 'required|exists:categories,id',
-            'tags' => 'array',
-            'tags.*' => 'exists:tags,id'
+            'title'       => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'category_id' => 'nullable|exists:categories,id',
+            'tags'        => 'array'
         ]);
 
-        $task = Task::create([
-            'title'=>$validated['title'],
-            'description'=>$validated['description'],
-            'category_id'=>$validated['category_id'],
-            'status'=>'incompleto'
-        ]);
+        $task = Task::create($validated);
+        if (!empty($validated['tags'])) {
+            $task->tags()->attach($validated['tags']);
+        }
 
-        if(!empty($request->tags)) $task->tags()->sync($request->tags);
-
-        return redirect()->route('tasks.index')->with('success','Tarea creada');
+        return redirect()->route('tasks.index')
+                         ->with('success','Tarea creada correctamente');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Task $task)
     {
-        return redirect()->route('tasks.index');
+        $task->load(['category','tags']);
+        return view('tasks.show', compact('task'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Task $task)
     {
-        //
+        $categories = Category::all();
+        $tags = Tag::all();
+        $task->load('tags');
+        return view('tasks.edit', compact('task','categories','tags'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $task)
+    public function update(Request $request, Task $task)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required',
-            'category_id' => 'required|exists:categories,id',
-            'tags' => 'array',
-            'tags.*' => 'exists:tags,id',
-            'status' => 'in:incompleto,completada'
+            'title'       => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'category_id' => 'nullable|exists:categories,id',
+            'tags'        => 'array'
         ]);
 
-        $task->update([
-            'title'=>$validated['title'],
-            'description'=>$validated['description'],
-            'category_id'=>$validated['category_id'],
-            'status'=>$validated['status'] ?? $task->status
-        ]);
+        $task->update($validated);
+        $task->tags()->sync($validated['tags'] ?? []);
 
-        $task->tags()->sync($request->tags ?? []);
-
-        return redirect()->route('tasks.index')->with('success','Tarea actualizada');
+        return redirect()->route('tasks.index')
+                         ->with('success','Tarea actualizada correctamente');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Task $task)
     {
-        //
+        $task->delete();
+        return redirect()->route('tasks.index')
+                         ->with('success','Tarea eliminada');
     }
 }

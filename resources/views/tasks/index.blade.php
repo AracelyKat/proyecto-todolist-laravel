@@ -9,6 +9,7 @@
 <table class="table table-bordered">
     <thead>
         <tr>
+            <th>Estado</th>
             <th>Título</th>
             <th>Categoría</th>
             <th>Etiquetas</th>
@@ -17,7 +18,11 @@
     </thead>
     <tbody>
     @foreach($tasks as $task)
-        <tr>
+        <tr class="{{ $task->status == 'completada' ? 'completed' : '' }}">
+            <td>
+                <input type="checkbox" class="task-status" data-id="{{ $task->id }}" 
+                       {{ $task->status == 'completada' ? 'checked' : '' }}>
+            </td>
             <td>{{ $task->title }}</td>
             <td>{{ $task->category->name ?? 'Sin categoría' }}</td>
             <td>
@@ -37,4 +42,41 @@
     @endforeach
     </tbody>
 </table>
+
+<style>
+    .completed td {
+        text-decoration: line-through;
+        color: gray;
+    }
+</style>
+
+<script>
+    document.querySelectorAll('.task-status').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const taskId = this.dataset.id;
+            const completed = this.checked ? 1 : 0;
+
+            // Actualizar la clase visual
+            if(this.checked) {
+                this.closest('tr').classList.add('completed');
+            } else {
+                this.closest('tr').classList.remove('completed');
+            }
+
+            // Llamada al backend para actualizar estado
+            fetch(`/tasks/${taskId}/toggle`, {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ completed: completed })
+            })
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(error => console.error(error));
+        });
+    });
+</script>
+
 @endsection

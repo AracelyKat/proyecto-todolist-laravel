@@ -11,4 +11,6 @@ Route::get('/', function () {
 Route::resource('tasks', TaskController::class);
 Route::resource('categories', CategoryController::class);
 Route::resource('tags', TagController::class);
+Route::patch('/tasks/{task}/toggle', [App\Http\Controllers\TaskController::class, 'toggle'])->name('tasks.toggle');
+
 

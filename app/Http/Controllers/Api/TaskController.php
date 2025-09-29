@@ -13,9 +13,13 @@ class TaskController extends Controller
     /**
      * Listar todas las tareas.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $tasks = Task::with(['category', 'tags'])->latest()->get();
+        $tasks = Task::with(['category', 'tags'])
+                 ->where('user_id', $request->user()->id)
+                 ->latest()
+                 ->get();
+        //$tasks = Task::with(['category', 'tags'])->latest()->get();
         return response()->json(['data' => $tasks], 200);
     }
 
@@ -32,8 +36,7 @@ class TaskController extends Controller
             'status'      => 'nullable|in:completada,incompleto'
         ]);
 
-        $task = Task::create($validated);
-
+        $task = $request->user()->tasks()->create($validated);
         if (!empty($validated['tags'])) {
             $task->tags()->attach($validated['tags']);
         }

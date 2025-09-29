@@ -9,75 +9,65 @@ use Illuminate\Http\Request;
 class TagController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Listar todas las etiquetas.
      */
     public function index()
     {
         $tags = Tag::all();
-        
-        return response()->json(['data' => $tags]);
-        //return view('tags.index', compact('tags'));
+        return response()->json(['data' => $tags], 200);
     }
 
-    // /**
-    //  * Show the form for creating a new resource.
-    //  */
-    // public function create()
-    // {
-    //     return view('tags.create');
-    // }
+    /**
+     * Crear una nueva etiqueta.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255'
+        ]);
 
-    // /**
-    //  * Store a newly created resource in storage.
-    //  */
-    // public function store(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'name' => 'required|string|max:255'
-    //     ]);
+        $tag = Tag::create($validated);
 
-    //     Tag::create($validated);
-    //     return redirect()->route('tags.index')
-    //                      ->with('success','Etiqueta creada correctamente');
-    // }
+        return response()->json([
+            'message' => 'Etiqueta creada correctamente',
+            'data' => $tag
+        ], 201);
+    }
 
-    // /**
-    //  * Display the specified resource.
-    //  */
-    // public function show(Tag $tag)
-    // {
-    //     return view('tags.show', compact('tag'));
-    // }
+    /**
+     * Mostrar una etiqueta específica.
+     */
+    public function show(Tag $tag)
+    {
+        return response()->json(['data' => $tag], 200);
+    }
 
-    // /**
-    //  * Show the form for editing the specified resource.
-    //  */
-    // public function edit(Tag $tag)
-    // {
-    //     return view('tags.edit', compact('tag'));
-    // }
+    /**
+     * Actualizar una etiqueta existente.
+     */
+    public function update(Request $request, Tag $tag)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255'
+        ]);
 
-    // /**
-    //  * Update the specified resource in storage.
-    //  */
-    // public function update(Request $request, Tag $tag)
-    // {
-    //     $validated = $request->validate([
-    //         'name' => 'required|string|max:255'
-    //     ]);
+        $tag->update($validated);
 
-    //     $tag->update($validated);
-    //     return redirect()->route('tags.index')
-    //                      ->with('success','Etiqueta actualizada correctamente');
-    // }
+        return response()->json([
+            'message' => 'Etiqueta actualizada correctamente',
+            'data' => $tag
+        ], 200);
+    }
 
-    // /**
-    //  * Remove the specified resource from storage.
-    //  */
-    // public function destroy(Tag $tag)
-    // {
-    //     $tag->delete();
-    //     return redirect()->route('tags.index')
-    //                      ->with('success','Etiqueta eliminada');
-    // }
+    /**
+     * Eliminar una etiqueta.
+     */
+    public function destroy(Tag $tag)
+    {
+        $tag->delete();
+
+        return response()->json([
+            'message' => 'Etiqueta eliminada correctamente'
+        ], 200);
+    }
 }

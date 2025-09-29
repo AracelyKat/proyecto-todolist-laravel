@@ -11,103 +11,81 @@ use Illuminate\Http\Request;
 class TaskController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Listar todas las tareas.
      */
     public function index()
     {
         $tasks = Task::with(['category', 'tags'])->latest()->get();
-        //return view('tasks.index', compact('tasks'));
-        return response()->json(['data' => $tasks]);
+        return response()->json(['data' => $tasks], 200);
     }
-    //comentar ctrl+k+c, descomentar ctrol+k+u
-    // /**
-    //  * Show the form for creating a new resource.
-    //  */
-    // public function create()
-    // {
-    //     $categories = Category::all();
-    //     $tags = Tag::all();
-    //     return view('tasks.create', compact('categories','tags'));
-    // }
 
-    // /**
-    //  * Store a newly created resource in storage.
-    //  */
-    // public function store(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'title'       => 'required|string|max:255',
-    //         'description' => 'nullable|string',
-    //         'category_id' => 'nullable|exists:categories,id',
-    //         'tags'        => 'array'
-    //     ]);
+    /**
+     * Crear una nueva tarea.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'title'       => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'category_id' => 'nullable|exists:categories,id',
+            'tags'        => 'array',
+            'status'      => 'nullable|in:completada,incompleto'
+        ]);
 
-    //     $task = Task::create($validated);
-    //     if (!empty($validated['tags'])) {
-    //         $task->tags()->attach($validated['tags']);
-    //     }
+        $task = Task::create($validated);
 
-    //     return redirect()->route('tasks.index')
-    //                      ->with('success','Tarea creada correctamente');
-    // }
+        if (!empty($validated['tags'])) {
+            $task->tags()->attach($validated['tags']);
+        }
 
-    // /**
-    //  * Display the specified resource.
-    //  */
-    // public function show(Task $task)
-    // {
-    //     $task->load(['category','tags']);
-    //     return view('tasks.show', compact('task'));
-    // }
+        return response()->json([
+            'message' => 'Tarea creada correctamente',
+            'data' => $task
+        ], 201);
+    }
 
-    // /**
-    //  * Show the form for editing the specified resource.
-    //  */
-    // public function edit(Task $task)
-    // {
-    //     $categories = Category::all();
-    //     $tags = Tag::all();
-    //     $task->load('tags');
-    //     return view('tasks.edit', compact('task','categories','tags'));
-    // }
+    /**
+     * Mostrar una tarea específica.
+     */
+    public function show(Task $task)
+    {
+        $task->load(['category','tags']);
+        return response()->json(['data' => $task], 200);
+    }
 
-    // /**
-    //  * Update the specified resource in storage.
-    //  */
-    // public function update(Request $request, Task $task)
-    // {
-    //     $validated = $request->validate([
-    //         'title'       => 'required|string|max:255',
-    //         'description' => 'nullable|string',
-    //         'category_id' => 'nullable|exists:categories,id',
-    //         'tags'        => 'array'
-    //     ]);
+    /**
+     * Actualizar una tarea existente (incluye completar la tarea).
+     */
+    public function update(Request $request, Task $task)
+    {
+        $validated = $request->validate([
+            'title'       => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'category_id' => 'nullable|exists:categories,id',
+            'tags'        => 'array',
+            'status'      => 'nullable|in:completada,incompleto'
+        ]);
 
-    //     $task->update($validated);
-    //     $task->tags()->sync($validated['tags'] ?? []);
+        $task->update($validated);
 
-    //     return redirect()->route('tasks.index')
-    //                      ->with('success','Tarea actualizada correctamente');
-    // }
+        if (isset($validated['tags'])) {
+            $task->tags()->sync($validated['tags']);
+        }
 
-    // /**
-    //  * Remove the specified resource from storage.
-    //  */
-    // public function destroy(Task $task)
-    // {
-    //     $task->delete();
-    //     return redirect()->route('tasks.index')
-    //                      ->with('success','Tarea eliminada');
-    // }
+        return response()->json([
+            'message' => 'Tarea actualizada correctamente',
+            'data' => $task
+        ], 200);
+    }
 
-    // public function toggle(Request $request, Task $task)
-    // {
-    //     $task->status = $request->completed ? 'completada' : 'incompleto';
-    //     $task->save();
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'status' => $task->status
-    //     ]);
-    //}
+    /**
+     * Eliminar una tarea.
+     */
+    public function destroy(Task $task)
+    {
+        $task->delete();
+        return response()->json([
+            'message' => 'Tarea eliminada correctamente'
+        ], 200);
+    }
 }

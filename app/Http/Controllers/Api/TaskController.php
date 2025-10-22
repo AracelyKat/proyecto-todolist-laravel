@@ -33,17 +33,19 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'category_id' => 'nullable|exists:categories,id',
             'tags'        => 'array',
+            'tags.*'      => 'exists:tags,id', // ← FALTABA ESTO
             'status'      => 'nullable|in:completada,incompleto'
         ]);
 
         $task = $request->user()->tasks()->create($validated);
+        
         if (!empty($validated['tags'])) {
             $task->tags()->attach($validated['tags']);
         }
 
         return response()->json([
             'message' => 'Tarea creada correctamente',
-            'data' => $task
+            'data' => $task->load(['category', 'tags']) // ← CARGAR RELACIONES EN RESPUESTA
         ], 201);
     }
 
@@ -66,6 +68,7 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'category_id' => 'nullable|exists:categories,id',
             'tags'        => 'array',
+            'tags.*'      => 'exists:tags,id', // ← AGREGAR ESTO
             'status'      => 'nullable|in:completada,incompleto'
         ]);
 
@@ -77,7 +80,7 @@ class TaskController extends Controller
 
         return response()->json([
             'message' => 'Tarea actualizada correctamente',
-            'data' => $task
+            'data' => $task->load(['category', 'tags']) // ← CARGAR RELACIONES
         ], 200);
     }
 

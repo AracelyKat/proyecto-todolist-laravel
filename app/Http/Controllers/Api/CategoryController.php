@@ -11,9 +11,19 @@ class CategoryController extends Controller
     /**
      * Muestra un listado de todas las categorías.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::all();
+        //$categories = Category::all();
+        //return response()->json(['data' => $categories]);
+        $usePagination = $request->query('pages', 'false') === 'true';
+        $categoryList = Category::orderBy('created_at', 'desc');
+        
+        if($usePagination) {
+            $categories = $categoryList->paginate(3);
+        } else {
+            $categories = $categoryList->get();
+        }
+        
         return response()->json(['data' => $categories]);
     }
 

@@ -11,10 +11,20 @@ class TagController extends Controller
     /**
      * Listar todas las etiquetas.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $tags = Tag::all();
-        return response()->json(['data' => $tags], 200);
+        //$tags = Tag::all();
+        //return response()->json(['data' => $tags], 200);
+        $usePagination = $request->query('pages', 'false') === 'true';
+        $tagList = Tag::orderBy('created_at', 'desc');
+        
+        if($usePagination) {
+            $tags = $tagList->paginate(3);
+        } else {
+            $tags = $tagList->get();
+        }
+        
+        return response()->json(['data' => $tags]);
     }
 
     /**

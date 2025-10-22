@@ -15,12 +15,21 @@ class TaskController extends Controller
      */
     public function index(Request $request)
     {
-        $tasks = Task::with(['category', 'tags'])
-                 ->where('user_id', $request->user()->id)
-                 ->latest()
-                 ->get();
-        //$tasks = Task::with(['category', 'tags'])->latest()->get();
-        return response()->json(['data' => $tasks], 200);
+        // $tasks = Task::with(['category', 'tags'])
+        //          ->where('user_id', $request->user()->id)
+        //          ->latest()
+        //          ->get();
+        // //$tasks = Task::with(['category', 'tags'])->latest()->get();
+        // return response()->json(['data' => $tasks], 200);
+        
+        $usePagination = $request->query('pages', 'false')==='true';
+        $taskList = Task::with('category', 'tags')->orderBy('created_at', 'desc');
+        if($usePagination) {
+            $tasks = $taskList->paginate(3);
+        } else {
+            $tasks = $taskList->get();
+        }
+        return response()->json(['data' => $tasks]);
     }
 
     /**
